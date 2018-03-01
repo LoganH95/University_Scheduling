@@ -1,0 +1,16 @@
+# Intellij
+.idea/
+*.class
+*.iml
+*.iws
+target
+libs/
+
+# Mac
+.DS_Store
+
+logs
+
+# Gradle
+# ------
+.gradle
