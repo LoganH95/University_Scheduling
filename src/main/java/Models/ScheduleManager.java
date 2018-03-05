@@ -19,6 +19,7 @@ public class ScheduleManager {
         classRooms = databaseConnection.getAllClassRooms();
         getAllPrereqs(databaseConnection);
         getAllQualifiedCourses(databaseConnection);
+        getAllSections(databaseConnection);
         databaseConnection.closeConnection();
     }
 
@@ -39,6 +40,12 @@ public class ScheduleManager {
     private void getAllQualifiedCourses(DatabaseConnection databaseConnection) {
         for (Professor professor : professors) {
             databaseConnection.getQualifiedCourses(professor, courses);
+        }
+    }
+
+    private void getAllSections(DatabaseConnection databaseConnection) {
+        for (Course course : courses.values()) {
+            databaseConnection.getSections(course);
         }
     }
 

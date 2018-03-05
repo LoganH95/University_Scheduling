@@ -154,6 +154,25 @@ public class DatabaseConnection {
 		return courses;
 	}
 
+	public void getSections(Course course) {
+		try {
+			String query = "SELECT * FROM " + SECTIONS_TABLE + " WHERE courseId=" + course.getId();
+			PreparedStatement statement = connection.prepareStatement(query);
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				Section section = new Section(
+						resultSet.getInt("id"),
+						resultSet.getString("sectionId"),
+						course,
+						resultSet.getInt("classSize")
+				);
+				course.addSection(section);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public ArrayList<Professor> getAllProfessors() {
 		ArrayList<Professor> professors = new ArrayList<>();
 		try {

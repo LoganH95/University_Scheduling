@@ -43,16 +43,7 @@ public class ClassRoom {
     }
 
     public boolean canFitCourse(Section section) {
-        if (this.getCapacity() < section.getClassSize()) {
-            return false;
-        }
-
-        for (Section scheduledSection : sections) {
-            if (section.sectionsOverlap(scheduledSection) && !section.equals(scheduledSection)) {
-                return false;
-            }
-        }
-        return true;
+        return this.getCapacity() >= section.getClassSize();
     }
 
     @Override

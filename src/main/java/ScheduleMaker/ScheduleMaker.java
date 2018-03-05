@@ -21,6 +21,7 @@ public class ScheduleMaker {
     }
 
     public void makeSchedule() {
+        ArrayList<Section> sections = new ArrayList<>();
         ArrayList<IntVar> sectionClassrooms = new ArrayList<>();
         ArrayList<IntVar> meetingDaysList = new ArrayList<>();
         ArrayList<IntVar> meetingTimes = new ArrayList<>();
@@ -30,7 +31,13 @@ public class ScheduleMaker {
 
         for (Course course : scheduleManager.getCourses().values()) {
             for (Section section : course.getSections()) {
+                sections.add(section);
                 ArrayList<ClassRoom> possibleClassrooms = section.possibleClassrooms(classRooms);
+                if (possibleClassrooms.size() == 0) {
+                    // TODO: do something with classes that are too big
+                    continue;
+                }
+
                 int[] possibleClassroomIds = new int[possibleClassrooms.size()];
                 for (int j = 0; j < possibleClassrooms.size(); j++) {
                     possibleClassroomIds[j] = possibleClassrooms.get(j).getId();
@@ -52,11 +59,13 @@ public class ScheduleMaker {
             }
         }
 
-        for (int i = 0; i < sectionClassrooms.size(); i++) {
+        for (int i = 0; i < 5; i++) {
+            System.out.println("i = " + i);
             IntVar classroomX = sectionClassrooms.get(i);
             IntVar meetingDayX = meetingDaysList.get(i);
             IntVar meetingTimeX = meetingTimes.get(i);
-            for (int j = i + 1; j < sectionClassrooms.size(); j++) {
+            for (int j = i + 1; j < 5; j++) {
+                System.out.println("j = " + j);
                 IntVar classroomY = sectionClassrooms.get(j);
                 IntVar meetingDayY = meetingDaysList.get(j);
                 IntVar meetingTimeY = meetingTimes.get(j);
@@ -72,10 +81,17 @@ public class ScheduleMaker {
                 );
             }
         }
-        // 2. Solving part
+
         Solver solver = model.getSolver();
-        if (solver.solve()){
+        solver.showStatistics();
+        if (solver.solve()) {
             System.out.println("Solution found");
+            for (int i = 0; i < sectionClassrooms.size(); i++) {
+                System.out.println("Section: " + sections.get(i).getId());
+                System.out.println("Classroom: " + sectionClassrooms.get(i).getValue());
+                System.out.println("MeetingDays: " + meetingDaysList.get(i).getValue());
+                System.out.println("Meeting Time: " + meetingTimes.get(i).getValue());
+            }
         } else {
             System.out.println("Solution not found");
         }
