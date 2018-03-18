@@ -10,14 +10,14 @@ public class ClassroomScraper {
     private DatabaseConnection databaseConnection;
     private UserAgent userAgent;
 
-    public static void main(String args[]) {
-        ClassroomScraper webScraper = new ClassroomScraper();
-        webScraper.scrape();
-    }
-
     private ClassroomScraper() {
         userAgent = new UserAgent();
         databaseConnection = new DatabaseConnection();
+    }
+
+    public static void main(String args[]) {
+        ClassroomScraper webScraper = new ClassroomScraper();
+        webScraper.scrape();
     }
 
     private void scrape() {

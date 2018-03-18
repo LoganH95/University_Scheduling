@@ -1,7 +1,5 @@
 package Models;
 
-import java.util.ArrayList;
-
 public class ClassRoom {
     private static int DEFAULT_ID = -1;
 
@@ -9,7 +7,6 @@ public class ClassRoom {
     private String buildingName;
     private String roomNumber;
     private int capacity;
-    private ArrayList<Section> sections;
 
     public ClassRoom(String buildingName, String roomNumber, int capacity) {
         this(DEFAULT_ID, buildingName, roomNumber, capacity);
@@ -38,10 +35,6 @@ public class ClassRoom {
         return capacity;
     }
 
-    public ArrayList<Section> getSections() {
-        return sections;
-    }
-
     public boolean canFitCourse(Section section) {
         return this.getCapacity() >= section.getClassSize();
     }
@@ -57,5 +50,10 @@ public class ClassRoom {
         final ClassRoom classRoom = (ClassRoom) obj;
 
         return classRoom.getId() == this.getId();
+    }
+
+    @Override
+    public String toString() {
+        return buildingName + " " + roomNumber;
     }
 }

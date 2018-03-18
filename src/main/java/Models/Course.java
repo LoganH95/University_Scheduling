@@ -63,37 +63,6 @@ public class Course {
         sections.add(section);
     }
 
-    public boolean isValidCourseAssignment() {
-        for (Section section : sections) {
-            if (!section.isValidSectionAssignment()) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public int[] possibleMeetingDays() {
-        if (credits >= 3) {
-            return new int[]{CourseTime.MeetingDays.MWF.ordinal(), CourseTime.MeetingDays.TTH.ordinal()};
-        } else if (credits == 2){
-            return new int[]{CourseTime.MeetingDays.T.ordinal(), CourseTime.MeetingDays.TH.ordinal(), CourseTime.MeetingDays.MW.ordinal(), CourseTime.MeetingDays.MF.ordinal(), CourseTime.MeetingDays.WF.ordinal()};
-        } else {
-            return new int[]{CourseTime.MeetingDays.M.ordinal(), CourseTime.MeetingDays.W.ordinal(), CourseTime.MeetingDays.F.ordinal()};
-        }
-    }
-
-    public boolean coursesOverlap(Course course) {
-        for (Section section : course.getSections()) {
-            for (Section section1 : this.sections) {
-                if (section.sectionsOverlap(section1)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -108,4 +77,15 @@ public class Course {
         return course.id == this.id;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder(department.getAbbreviation() + " " + code);
+        stringBuilder.append(": ");
+        stringBuilder.append(this.getName());
+        for (Section section : sections) {
+            stringBuilder.append("\n\t");
+            stringBuilder.append(section.toString());
+        }
+        return stringBuilder.toString();
+    }
 }

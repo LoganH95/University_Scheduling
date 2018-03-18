@@ -3,7 +3,7 @@ package WebScraper;
 import java.util.Random;
 
 public class RandomNameGenerator {
-    private String[] givenNames = new String[] {
+    private String[] givenNames = new String[]{
             "Ada", "Albert", "Alexandra", "Alfredo", "Allen", "Andre", "Angelica",
             "Anna", "Anthony", "Antonio", "Ashley", "Audrey", "Beatrice",
             "Benjamin", "Billy", "Bobby", "Bradley", "Bryant", "Candace",
@@ -20,7 +20,7 @@ public class RandomNameGenerator {
             "Steven", "Stuart", "Terence", "Terry", "Van", "Velma", "Vincent",
             "Wanda", "Willard", "Winifred"
     };
-    private String[] surnames = new String[] {
+    private String[] surnames = new String[]{
             "Adkins", "Aguilar", "Anderson", "Armstrong", "Arnold", "Bailey",
             "Banks", "Barrett", "Bates", "Bennett", "Bowers", "Bradley", "Brown",
             "Bryant", "Buchanan", "Bush", "Butler", "Cain", "Carlson", "Carroll",

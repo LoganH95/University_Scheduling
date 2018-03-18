@@ -3,114 +3,153 @@ package ScheduleMaker;
 import Models.*;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
-import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class ScheduleMaker {
     private ScheduleManager scheduleManager;
-
-    public static void main(String args[]) {
-        ScheduleMaker scheduleMaker = new ScheduleMaker();
-        scheduleMaker.makeSchedule();
-    }
 
     public ScheduleMaker() {
         scheduleManager = new ScheduleManager();
     }
 
-    public void makeSchedule() {
-        ArrayList<Section> sections = new ArrayList<>();
-        ArrayList<IntVar> sectionClassrooms = new ArrayList<>();
-        ArrayList<IntVar> meetingDaysList = new ArrayList<>();
-        ArrayList<IntVar> meetingTimes = new ArrayList<>();
-        ArrayList<ClassRoom> classRooms = scheduleManager.getClassRooms();
+    public static void main(String args[]) {
+        ScheduleMaker scheduleMaker = new ScheduleMaker();
+        scheduleMaker.startScheduleMaker();
+    }
 
-        Model model = new Model("University Scheduling");
-
-        for (Course course : scheduleManager.getCourses().values()) {
-            for (Section section : course.getSections()) {
-                sections.add(section);
-                ArrayList<ClassRoom> possibleClassrooms = section.possibleClassrooms(classRooms);
-                if (possibleClassrooms.size() == 0) {
-                    // TODO: do something with classes that are too big
-                    continue;
-                }
-
-                int[] possibleClassroomIds = new int[possibleClassrooms.size()];
-                for (int j = 0; j < possibleClassrooms.size(); j++) {
-                    possibleClassroomIds[j] = possibleClassrooms.get(j).getId();
-                }
-                IntVar classRoom = model.intVar("Classrooms: " + section.getId(), possibleClassroomIds);
-                sectionClassrooms.add(classRoom);
-
-                IntVar meetingDays = model.intVar("MeetingDays: " + section.getId(), course.possibleMeetingDays());
-                meetingDaysList.add(meetingDays);
-
-                IntVar meetingTime = model.intVar("MeetingTime: " + section.getId(), CourseTime.meetingTimes());
-                // Constraint for possible meeting times based on day the class is on
-                model.ifThenElse(
-                        model.arithm(meetingDays, "<", 3),
-                        model.arithm(meetingTime, ">", 8),
-                        model.arithm(meetingTime, "<", 9)
-                );
-                meetingTimes.add(meetingTime);
-            }
-        }
-
-        for (int i = 0; i < 5; i++) {
-            System.out.println("i = " + i);
-            IntVar classroomX = sectionClassrooms.get(i);
-            IntVar meetingDayX = meetingDaysList.get(i);
-            IntVar meetingTimeX = meetingTimes.get(i);
-            for (int j = i + 1; j < 5; j++) {
-                System.out.println("j = " + j);
-                IntVar classroomY = sectionClassrooms.get(j);
-                IntVar meetingDayY = meetingDaysList.get(j);
-                IntVar meetingTimeY = meetingTimes.get(j);
-                model.ifThen(
-                        model.and(
-                                model.allEqual(classroomX, classroomY),
-                                daysOverlap(model, meetingDayX, meetingDayY)
-                        ),
-                        model.allDifferent(
-                                meetingTimeX,
-                                meetingTimeY
-                        )
-                );
-            }
-        }
-
-        Solver solver = model.getSolver();
-        solver.showStatistics();
-        if (solver.solve()) {
+    public void startScheduleMaker() {
+        if (makeSchedule()) {
             System.out.println("Solution found");
-            for (int i = 0; i < sectionClassrooms.size(); i++) {
-                System.out.println("Section: " + sections.get(i).getId());
-                System.out.println("Classroom: " + sectionClassrooms.get(i).getValue());
-                System.out.println("MeetingDays: " + meetingDaysList.get(i).getValue());
-                System.out.println("Meeting Time: " + meetingTimes.get(i).getValue());
-            }
+            printSchedule();
         } else {
-            System.out.println("Solution not found");
+            System.out.println("No Solution found");
         }
     }
 
-    public Constraint daysOverlap(Model model, IntVar meetingDayX, IntVar meetingDayY) {
-        return model.or(
-                model.and(
-                        model.arithm(meetingDayX, "<", 3),
-                        model.arithm(meetingDayY, "<", 3)
-                ),
-                model.and(
-                        model.arithm(meetingDayX, ">", 2),
-                        model.arithm(meetingDayY, ">", 5)
-                ),
-                model.and(
-                        model.arithm(meetingDayX, ">", 5),
-                        model.arithm(meetingDayY, ">", 2)
-                )
-        );
+    private boolean makeSchedule() {
+        ArrayList<Section> sections = new ArrayList<>();
+        ArrayList<ClassRoomTime> classRooms = scheduleManager.getClassRoomTimes();
+
+        Model model = new Model("Scheduling");
+        for (Course course : scheduleManager.getCourses().values()) {
+            for (Section section : course.getSections()) {
+                sections.add(section);
+                ArrayList<ClassRoomTime> possibleClassrooms = section.possibleClassrooms(classRooms);
+                for (ClassRoomTime classRoomTime : possibleClassrooms) {
+                    BoolVar var = model.boolVar(section.getId() + " " + classRoomTime.getId());
+                    section.sectionClassRooms.add(var);
+                    classRoomTime.addSection(var);
+                }
+            }
+        }
+
+        for (Section section : sections) {
+            // Ensure that each section is assigned to exactly 1 class room
+            model.sum(arrayListToArray(section.sectionClassRooms), "=", 1).post();
+        }
+
+        for (ClassRoomTime classRoomTime : classRooms) {
+            // Ensure that each class room only has 1 section at a time
+            model.sum(arrayListToArray(classRoomTime.getSections()), "<=", 1).post();
+        }
+
+        System.out.println("Starting solver schedule");
+        Solver solver = model.getSolver();
+        while (solver.solve()) {
+            for (Section section : sections) {
+                ArrayList<BoolVar> sectionClassRooms = section.sectionClassRooms;
+                for (BoolVar sectionClassRoom : sectionClassRooms) {
+                    if (sectionClassRoom.getValue() == 1) {
+                        String name = sectionClassRoom.getName();
+                        int index = Integer.parseInt(name.substring(name.indexOf(" ") + 1));
+                        ClassRoomTime classRoomTime = classRooms.get(index);
+                        section.setClassRoom(classRoomTime.getClassRoom());
+                        section.setCourseTime(classRoomTime.getCourseTime());
+                        break;
+                    }
+                }
+            }
+
+            if (scheduleProfessors(sections)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean scheduleProfessors(ArrayList<Section> sections) {
+        ArrayList<Professor> professors = scheduleManager.getProfessors();
+
+        Model model = new Model("Professor Assignment");
+        for (Section section : sections) {
+            for (Professor professor : professors) {
+                if (professor.isQualifiedCourse(section.getCourse())) {
+                    BoolVar boolVar = model.boolVar(section.getId() + " " + professor.getId());
+                    professor.addPossibleCourse(section.getCourseTime(), boolVar);
+                    section.addPossibleProfessor(boolVar);
+                }
+            }
+        }
+
+        for (Section section : sections) {
+            // Ensure that each section has 1 professor assigned to it
+            model.sum(arrayListToArray(section.getPossibleProfessors()), "=", 1).post();
+        }
+
+        for (Professor professor : professors) {
+            if (professor.getPossibleCourses().size() == 0) {
+                continue;
+            }
+            // Ensure that a professor teaches no more than 4 sections
+            model.sum(arrayListToArray(professor.getPossibleCourses()), "<=", 4);
+            ArrayList<ArrayList<BoolVar>> teachingTimes = professor.getTeachingTimes();
+            for (ArrayList<BoolVar> teachingTime : teachingTimes) {
+                if (teachingTime.size() == 0) {
+                    continue;
+                }
+                // Ensure that a professor is not teaching more than 1 course at a time
+                model.sum(arrayListToArray(teachingTime), "<=", 1);
+            }
+        }
+
+
+        System.out.println("Starting solver professors");
+        Solver solver = model.getSolver();
+        if (solver.solve()) {
+            for (Section section : sections) {
+                ArrayList<BoolVar> possibleProfessors = section.getPossibleProfessors();
+                for (BoolVar possibleProfessor : possibleProfessors) {
+                    if (possibleProfessor.getValue() == 1) {
+                        String name = possibleProfessor.getName();
+                        int index = Integer.parseInt(name.substring(name.indexOf(" ") + 1)) - 1;
+                        Professor professor = professors.get(index);
+                        section.setProfessor(professor);
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void printSchedule() {
+        for (Course course : scheduleManager.getCourses().values()) {
+            System.out.println(course.toString());
+        }
+    }
+
+    private BoolVar[] arrayListToArray(ArrayList<BoolVar> arrayList) {
+        BoolVar[] array = new BoolVar[arrayList.size()];
+        for (int i = 0; i < arrayList.size(); i++) {
+            array[i] = arrayList.get(i);
+        }
+        return array;
     }
 }

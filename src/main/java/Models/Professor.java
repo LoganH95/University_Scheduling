@@ -1,5 +1,7 @@
 package Models;
 
+import org.chocosolver.solver.variables.BoolVar;
+
 import java.util.ArrayList;
 
 public class Professor {
@@ -8,7 +10,8 @@ public class Professor {
     private int id;
     private String name;
     private ArrayList<Course> qualifiedCourses;  // List of all QualifiedCourses this professor can teach
-    private ArrayList<Course> courses; // List of all QualifiedCourses this professor is courses
+    private ArrayList<BoolVar> possibleCourses;
+    private ArrayList<ArrayList<BoolVar>> teachingTimes;
 
     public Professor(String name) {
         this(DEFAULT_ID, name);
@@ -18,24 +21,24 @@ public class Professor {
         this.id = id;
         this.name = name;
         this.qualifiedCourses = new ArrayList<>();
-        this.courses = new ArrayList<>();
-        courses = new ArrayList<>();
-    }
+        possibleCourses = new ArrayList<>();
+        teachingTimes = new ArrayList<>();
+        for (int i = 0; i < CourseTime.MeetingTime.values().length; i++) {
+            ArrayList<BoolVar> arrayList = new ArrayList<>();
+            teachingTimes.add(arrayList);
+        }
+     }
 
     public void addQualifiedCourse(Course course) {
         qualifiedCourses.add(course);
     }
 
-    public void addCourse(Course course) {
-        courses.add(course);
+    public int getId() {
+        return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public String getName() {
@@ -46,21 +49,21 @@ public class Professor {
         return qualifiedCourses;
     }
 
-    public ArrayList<Course> getCourses() {
-        return courses;
+    public ArrayList<BoolVar> getPossibleCourses() {
+        return possibleCourses;
     }
 
-    public boolean canTeachCourse(Course course) {
-        if ( !qualifiedCourses.contains(course) ) {
-            return false;
-        }
+    public ArrayList<ArrayList<BoolVar>> getTeachingTimes() {
+        return teachingTimes;
+    }
 
-        for (Course teachingCourse : courses) {
-            if ( course.coursesOverlap(teachingCourse) && !course.equals(teachingCourse)) {
-                return false;
-            }
-        }
-        return true;
+    public void addPossibleCourse(CourseTime time, BoolVar boolVar) {
+        possibleCourses.add(boolVar);
+        teachingTimes.get(time.getMeetingTime().ordinal()).add(boolVar);
+    }
+
+    public boolean isQualifiedCourse(Course course) {
+        return qualifiedCourses.contains(course);
     }
 
     @Override
@@ -75,5 +78,10 @@ public class Professor {
 
 
         return professor.getId() == this.getId();
+    }
+
+    @Override
+    public String toString() {
+        return name + "(" + id + ")";
     }
 }

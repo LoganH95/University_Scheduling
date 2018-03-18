@@ -1,20 +1,6 @@
 package Models;
 
-import java.sql.Time;
-
 public class CourseTime {
-    public enum MeetingDays {
-        T,
-        TH,
-        TTH,
-        M,
-        W,
-        F,
-        MW,
-        MF,
-        WF,
-        MWF
-    }
 
     public enum MeetingTime {
         HOUR8,
@@ -31,63 +17,26 @@ public class CourseTime {
         HOURHALF11,
         HOURHALF1230,
         HOURHALF2,
-        HOURHALF330
+        HOURHALF330,
+        HOURHALF500
     }
 
-    private MeetingDays meetingDays;
-    private Time startTime;
-    private Time endTime;
+    private MeetingTime meetingTime;
 
-    public CourseTime(MeetingDays meetingDays, Time startTime, Time endTime) {
-        this.meetingDays = meetingDays;
-        this.startTime = startTime;
-        this.endTime = endTime;
+    public CourseTime(MeetingTime meetingTime) {
+        this.meetingTime = meetingTime;
     }
 
-    public MeetingDays getMeetingDays() {
-        return meetingDays;
+    public MeetingTime getMeetingTime() {
+        return meetingTime;
     }
 
-    public Time getStartTime() {
-        return startTime;
-    }
-
-    public Time getEndTime() {
-        return endTime;
+    public void setMeetingTime(MeetingTime meetingTime) {
+        this.meetingTime = meetingTime;
     }
 
     public boolean timeOverlap(CourseTime courseTime) {
-        switch (courseTime.getMeetingDays()) {
-            case M:
-            case W:
-            case F:
-            case MW:
-            case MF:
-            case WF:
-            case MWF:
-                if (this.getMeetingDays() == MeetingDays.TTH
-                        || this.getMeetingDays() == MeetingDays.T
-                        || this.getMeetingDays() == MeetingDays.TH) {
-                    return false;
-                }
-                break;
-
-            case T:
-            case TH:
-            case TTH:
-                if (this.getMeetingDays() != MeetingDays.TTH
-                        && this.getMeetingDays() != MeetingDays.T
-                        && this.getMeetingDays() != MeetingDays.TH) {
-                    return false;
-                }
-                break;
-
-            default: // Should not get here
-                break;
-        }
-
-        return !this.endTime.before(courseTime.getStartTime()) && !this.startTime.after(courseTime.getEndTime());
-
+        return this.meetingTime == courseTime.meetingTime;
     }
 
     @Override
@@ -100,9 +49,7 @@ public class CourseTime {
 
         final CourseTime courseTime = (CourseTime) obj;
 
-        return courseTime.getMeetingDays() == this.getMeetingDays() &&
-                courseTime.getStartTime().equals(this.getStartTime()) &&
-                courseTime.getEndTime().equals(this.getEndTime());
+        return courseTime.getMeetingTime() == this.getMeetingTime();
     }
 
     public static int[] meetingTimes() {
@@ -125,4 +72,56 @@ public class CourseTime {
         };
     }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (meetingTime.ordinal() < 9) {
+            stringBuilder.append("Monday, Wednesday, Friday ");
+        } else {
+            stringBuilder.append("Tuesday, Thursday ");
+        }
+        stringBuilder.append(meetingTimeToString());
+
+        return stringBuilder.toString();
+    }
+
+    private String meetingTimeToString() {
+        switch (meetingTime) {
+            case HOUR8:
+                return "8:00 AM - 8:50 AM";
+            case HOUR9:
+                return "9:00 AM - 9:50 AM";
+            case HOUR10:
+                return "10:00 AM - 10:50 AM";
+            case HOUR11:
+                return "11:00 AM - 11:50 AM";
+            case HOUR12:
+                return "12:10 PM - 1:00 PM";
+            case HOUR1:
+                return "1:10 PM - 2:00 PM";
+            case HOUR2:
+                return "2:10 PM - 3:00 PM";
+            case HOUR3:
+                return "3:10 PM - 4:00 PM";
+            case HOUR4:
+                return "4:10 PM - 5:00 PM";
+            case HOURHALF8:
+                return "8:00 AM - 9:15 AM";
+            case HOURHALF930:
+                return "9:30 AM - 10:45 AM";
+            case HOURHALF11:
+                return "11:00 AM - 12:15 PM";
+            case HOURHALF1230:
+                return "12:30 PM - 1:45 PM";
+            case HOURHALF2:
+                return "2:00 PM - 3:15 PM";
+            case HOURHALF330:
+                return "3:30 PM - 4:45 PM";
+            case HOURHALF500:
+                return "5:00 PM - 6:15 PM";
+            default:
+                return "";
+
+        }
+    }
 }

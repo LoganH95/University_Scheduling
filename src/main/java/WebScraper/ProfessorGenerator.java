@@ -16,15 +16,15 @@ public class ProfessorGenerator {
     private int totalNumProfessors;
 
 
-    public static void main(String args[]) {
-        ProfessorGenerator professorGenerator = new ProfessorGenerator();
-        professorGenerator.generate();
-    }
-
     private ProfessorGenerator() {
         databaseConnection = new DatabaseConnection();
         randomNameGenerator = new RandomNameGenerator();
         totalNumProfessors = 0;
+    }
+
+    public static void main(String args[]) {
+        ProfessorGenerator professorGenerator = new ProfessorGenerator();
+        professorGenerator.generate();
     }
 
     private void generate() {
@@ -33,7 +33,7 @@ public class ProfessorGenerator {
         databaseConnection.getAllCourses(departments);
         for (Department department : departments.values()) {
             int courseCount = department.getCourses().size();
-            int professorCount = 1 + courseCount/2 + rand.nextInt(4);
+            int professorCount = 1 + courseCount / 2 + rand.nextInt(4);
             ArrayList<Professor> professors = new ArrayList<>();
             for (int i = 0; i < professorCount; i++) {
                 Professor professor = new Professor(++totalNumProfessors, randomNameGenerator.generateName());
@@ -41,7 +41,7 @@ public class ProfessorGenerator {
             }
 
             for (Course course : department.getCourses().values()) {
-                int qualifiedCount = 1 + rand.nextInt(professors.size()/3 + 1);
+                int qualifiedCount = 1 + rand.nextInt(professors.size() / 3 + 1);
                 Collections.shuffle(professors);
                 for (int i = 0; i < qualifiedCount; i++) {
                     if (i == professors.size()) {
