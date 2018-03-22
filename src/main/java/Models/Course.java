@@ -10,19 +10,21 @@ public class Course {
     private String code;
     private Department department;
     private int credits;
+    private int semesterId;
     private ArrayList<Course> prerequisites;
     private ArrayList<Section> sections;
 
     public Course(String name, String code, Department department, int credits) {
-        this(DEFAULT_ID, name, code, department, credits);
+        this(DEFAULT_ID, name, code, department, credits, 0);
     }
 
-    public Course(int id, String name, String code, Department department, int credits) {
+    public Course(int id, String name, String code, Department department, int credits, int semesterId) {
         this.id = id;
         this.name = name;
         this.code = code;
         this.department = department;
         this.credits = credits;
+        this.semesterId = semesterId;
         prerequisites = new ArrayList<>();
         sections = new ArrayList<>();
     }
@@ -53,6 +55,10 @@ public class Course {
 
     public ArrayList<Section> getSections() {
         return sections;
+    }
+
+    public int getSemesterId() {
+        return semesterId;
     }
 
     public void addPrerequisites(Course course) {

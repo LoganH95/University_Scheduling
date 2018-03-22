@@ -4,11 +4,7 @@ import Models.*;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.variables.BoolVar;
-import org.chocosolver.solver.variables.IntVar;
-
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class ScheduleMaker {
     private ScheduleManager scheduleManager;
@@ -25,32 +21,44 @@ public class ScheduleMaker {
     public void startScheduleMaker() {
         if (makeSchedule()) {
             System.out.println("Solution found");
-            printSchedule();
+            if (scheduleManager.verifySchedule()) {
+                System.out.println("Schedule verified");
+                System.out.println("Schedule Score: " + scheduleManager.scheduleScore());
+                printSchedule();
+            } else {
+                System.out.println("Schedule found to have conflicts");
+            }
         } else {
             System.out.println("No Solution found");
         }
     }
 
     private boolean makeSchedule() {
-        ArrayList<Section> sections = new ArrayList<>();
+        ArrayList<Section> sections = scheduleManager.getSections();
         ArrayList<ClassRoomTime> classRooms = scheduleManager.getClassRoomTimes();
 
         Model model = new Model("Scheduling");
-        for (Course course : scheduleManager.getCourses().values()) {
-            for (Section section : course.getSections()) {
-                sections.add(section);
-                ArrayList<ClassRoomTime> possibleClassrooms = section.possibleClassrooms(classRooms);
-                for (ClassRoomTime classRoomTime : possibleClassrooms) {
-                    BoolVar var = model.boolVar(section.getId() + " " + classRoomTime.getId());
-                    section.sectionClassRooms.add(var);
-                    classRoomTime.addSection(var);
-                }
+        for (Section section : sections) {
+            ArrayList<ClassRoomTime> possibleClassrooms = section.possibleClassrooms(classRooms);
+            for (ClassRoomTime classRoomTime : possibleClassrooms) {
+                BoolVar var = model.boolVar(section.getId() + " " + classRoomTime.getId());
+                section.sectionClassRooms.add(var);
+                classRoomTime.addSection(var);
             }
         }
 
-        for (Section section : sections) {
+        for (int i = 0; i < sections.size(); i++) {
+            Section section = sections.get(i);
             // Ensure that each section is assigned to exactly 1 class room
             model.sum(arrayListToArray(section.sectionClassRooms), "=", 1).post();
+            // Add soft constraint for courses that should be taken during close semesters
+//            for (int j = i + 1; j < sections.size(); j++) {
+//                Section otherSection = sections.get(j);
+//                if (section.semestersOverlap(otherSection)) {
+//                    model.allDifferent().reify();
+//
+//                }
+//            }
         }
 
         for (ClassRoomTime classRoomTime : classRooms) {
@@ -74,10 +82,11 @@ public class ScheduleMaker {
                     }
                 }
             }
+            return true;
 
-            if (scheduleProfessors(sections)) {
+            /*if (scheduleProfessors(sections)) {
                 return true;
-            }
+            }*/
         }
 
         return false;
@@ -107,17 +116,16 @@ public class ScheduleMaker {
                 continue;
             }
             // Ensure that a professor teaches no more than 4 sections
-            model.sum(arrayListToArray(professor.getPossibleCourses()), "<=", 4);
+            model.sum(arrayListToArray(professor.getPossibleCourses()), "<=", 4).post();
             ArrayList<ArrayList<BoolVar>> teachingTimes = professor.getTeachingTimes();
             for (ArrayList<BoolVar> teachingTime : teachingTimes) {
                 if (teachingTime.size() == 0) {
                     continue;
                 }
                 // Ensure that a professor is not teaching more than 1 course at a time
-                model.sum(arrayListToArray(teachingTime), "<=", 1);
+                model.sum(arrayListToArray(teachingTime), "<=", 1).post();
             }
         }
-
 
         System.out.println("Starting solver professors");
         Solver solver = model.getSolver();

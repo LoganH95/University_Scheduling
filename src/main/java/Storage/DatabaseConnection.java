@@ -141,7 +141,8 @@ public class DatabaseConnection {
                         resultSet.getString("name"),
                         resultSet.getString("code"),
                         department,
-                        resultSet.getInt("credits")
+                        resultSet.getInt("credits"),
+                        resultSet.getInt("semesterId")
                 );
                 courses.put(id, course);
                 department.addCourse(course);
@@ -167,7 +168,8 @@ public class DatabaseConnection {
                         resultSet.getString("name"),
                         resultSet.getString("code"),
                         department,
-                        resultSet.getInt("credits")
+                        resultSet.getInt("credits"),
+                        resultSet.getInt("semesterId")
                 );
                 courses.put(id, course);
                 department.addCourse(course);
@@ -300,7 +302,8 @@ public class DatabaseConnection {
                         resultSet.getString("name"),
                         resultSet.getString("code"),
                         null,
-                        resultSet.getInt("credits")
+                        resultSet.getInt("credits"),
+                        resultSet.getInt("semesterId")
                 );
             }
         } catch (Exception e) {

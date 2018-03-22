@@ -91,7 +91,8 @@ public class CourseScraper {
                                 courseJSON.getString("classTitle").replaceAll("'", "''"),
                                 courseJSON.getString("classNumber"),
                                 department,
-                                sections.getJSONObject(0).getInt("creditLow"));
+                                sections.getJSONObject(0).getInt("creditLow"),
+                                0);
                         databaseConnection.exportCourse(course);
                         for (int j = 0; j < sections.length(); j++) {
                             JSONObject sectionJSON = sections.getJSONObject(j);

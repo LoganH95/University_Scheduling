@@ -12,17 +12,16 @@ public class ScheduleManager {
     private Map<Integer, Department> departments;
     private ArrayList<Professor> professors;
     private ArrayList<ClassRoom> classRooms;
+    private ArrayList<Section> sections;
     private ArrayList<ClassRoomTime> classRoomTimes;
 
     public ScheduleManager() {
         DatabaseConnection databaseConnection = new DatabaseConnection();
         departments = databaseConnection.getAllDepartments();
         courses = databaseConnection.getAllCoursesForDepartment(departments.get(COMPUTER_SCIENCE));
-        //courses = databaseConnection.getAllCourses(departments);
         professors = databaseConnection.getAllProfessors();
         classRooms = databaseConnection.getAllClassRooms();
         makeClassRoomTimes();
-        getAllPrereqs(databaseConnection);
         getAllQualifiedCourses(databaseConnection);
         getAllSections(databaseConnection);
         databaseConnection.closeConnection();
@@ -30,10 +29,6 @@ public class ScheduleManager {
 
     public Map<Integer, Course> getCourses() {
         return courses;
-    }
-
-    public ArrayList<ClassRoom> getClassRooms() {
-        return classRooms;
     }
 
     public ArrayList<ClassRoomTime> getClassRoomTimes() {
@@ -44,10 +39,45 @@ public class ScheduleManager {
         return professors;
     }
 
-    private void getAllPrereqs(DatabaseConnection databaseConnection) {
-        for (Course course : courses.values()) {
-            databaseConnection.getPrerequisites(course, courses);
+    public ArrayList<Section> getSections() {
+        return sections;
+    }
+
+    public int scheduleScore() {
+        System.out.println("Scoring Schedule");
+        int scheduleScore = 0;
+        for (int i = 0; i < sections.size(); i++) {
+            Section section = sections.get(i);
+            for (int j = i; j < sections.size(); j++) {
+                scheduleScore += section.getOverlapScore(sections.get(j));
+            }
         }
+
+        return scheduleScore;
+    }
+
+    public boolean verifySchedule() {
+        System.out.println("Verifying Schedule");
+        for (int i = 0; i < sections.size(); i++) {
+            Section section = sections.get(i);
+            if (!section.getClassRoom().canFitCourse(section)) {
+                System.out.println("Classroom too small");
+                System.out.println("Section:\n" + section.toString());
+                System.out.println("Classroom:\n" + section.getClassRoom().toString());
+                return false;
+            }
+
+            for (int j = i + 1; j < sections.size(); j++) {
+                Section compareSection = sections.get(j);
+                if (section.sectionsOverlap(compareSection)) {
+                    System.out.println("Section Overlap");
+                    System.out.println("Section 1:\n" + section.toString());
+                    System.out.println("Section 2:\n" + compareSection.toString());
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void getAllQualifiedCourses(DatabaseConnection databaseConnection) {
@@ -57,8 +87,10 @@ public class ScheduleManager {
     }
 
     private void getAllSections(DatabaseConnection databaseConnection) {
+        sections = new ArrayList<>();
         for (Course course : courses.values()) {
             databaseConnection.getSections(course);
+            sections.addAll(course.getSections());
         }
     }
 

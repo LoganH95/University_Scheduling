@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 public class Section {
     private static int DEFAULT_ID = -1;
+    private static int SEMESTER_DIFF_THRESHOLD = 1;
+
     public ArrayList<BoolVar> sectionClassRooms;
     private int id;
     private String sectionId;
@@ -78,7 +80,27 @@ public class Section {
     }
 
     public boolean sectionsOverlap(Section section) {
-        return courseTime.timeOverlap(section.getCourseTime());
+        // If two sections are at the same time they overlap if they are in the same room
+        // or have the same professor
+
+        return courseTime.timeOverlap(section.getCourseTime()) && classRoom.equals(section.getClassRoom());
+        //return courseTime.timeOverlap(section.getCourseTime()) &&
+        //        (classRoom.equals(section.getClassRoom()) || professor.equals(section.getProfessor()));
+    }
+
+    public int getOverlapScore(Section section) {
+        if (!courseTime.timeOverlap(section.getCourseTime())) {
+            return 0;
+        }
+
+        int diff = Math.abs(course.getSemesterId() - section.getCourse().getSemesterId());
+        return diff - 10;
+    }
+
+    public boolean semestersOverlap(Section section) {
+        Course course1 = section.getCourse();
+        int diff = Math.abs(course.getSemesterId() - course1.getSemesterId());
+        return diff <= SEMESTER_DIFF_THRESHOLD;
     }
 
     public ArrayList<ClassRoomTime> possibleClassrooms(ArrayList<ClassRoomTime> classRooms) {
@@ -106,6 +128,9 @@ public class Section {
 
     @Override
     public String toString() {
+        if (professor == null) {
+            return sectionId + "\n\t Time: " + courseTime.toString() + "\n\t classroom: " + classRoom.toString();
+        }
         return sectionId + "\n\t Time: " + courseTime.toString() + "\n\t" + professor.toString() + "\n\t classroom: " + classRoom.toString();
     }
 }
