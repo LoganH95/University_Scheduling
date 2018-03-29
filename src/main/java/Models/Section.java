@@ -1,6 +1,7 @@
 package Models;
 
 import org.chocosolver.solver.variables.BoolVar;
+import org.chocosolver.solver.variables.IntVar;
 
 import java.util.ArrayList;
 
@@ -8,7 +9,6 @@ public class Section {
     private static int DEFAULT_ID = -1;
     private static int SEMESTER_DIFF_THRESHOLD = 1;
 
-    public ArrayList<BoolVar> sectionClassRooms;
     private int id;
     private String sectionId;
     private Course course;
@@ -16,6 +16,9 @@ public class Section {
     private Professor professor;
     private CourseTime courseTime;
     private ClassRoom classRoom;
+    private IntVar classRoomAssignment;
+    private IntVar timeAssignment;
+    private int possibleClassroomSize;
     private ArrayList<BoolVar> possibleProfessors;
 
     public Section(String sectionId, Course course, int classSize) {
@@ -24,10 +27,9 @@ public class Section {
 
     public Section(int id, String sectionId, Course course, int classSize) {
         this.id = id;
-        this.sectionId = sectionId;
+        this.sectionId = sectionId.trim();
         this.course = course;
         this.classSize = classSize;
-        sectionClassRooms = new ArrayList<>();
         possibleProfessors = new ArrayList<>();
     }
 
@@ -71,6 +73,22 @@ public class Section {
         this.classRoom = classRoom;
     }
 
+    public void setClassRoomAssignment(IntVar classRoomAssignment) {
+        this.classRoomAssignment = classRoomAssignment;
+    }
+
+    public IntVar getClassRoomAssignment() {
+        return classRoomAssignment;
+    }
+
+    public void setTimeAssignment(IntVar timeAssignment) {
+        this.timeAssignment = timeAssignment;
+    }
+
+    public IntVar getTimeAssignment() {
+        return timeAssignment;
+    }
+
     public ArrayList<BoolVar> getPossibleProfessors() {
         return possibleProfessors;
     }
@@ -80,21 +98,22 @@ public class Section {
     }
 
     public boolean sectionsOverlap(Section section) {
-        // If two sections are at the same time they overlap if they are in the same room
-        // or have the same professor
-
         return courseTime.timeOverlap(section.getCourseTime()) && classRoom.equals(section.getClassRoom());
-        //return courseTime.timeOverlap(section.getCourseTime()) &&
-        //        (classRoom.equals(section.getClassRoom()) || professor.equals(section.getProfessor()));
     }
 
-    public int getOverlapScore(Section section) {
-        if (!courseTime.timeOverlap(section.getCourseTime())) {
+    public int getOverlapValue(Section section) {
+        if (!semestersOverlap(section)) {
             return 0;
+        } else if (section.getId() == this.id) {
+            return -5;
         }
 
         int diff = Math.abs(course.getSemesterId() - section.getCourse().getSemesterId());
-        return diff - 10;
+        return diff - 2;
+    }
+
+    public int getOverlapScore(Section section) {
+        return courseTime.timeOverlap(section.getCourseTime()) ? getOverlapValue(section) : 0;
     }
 
     public boolean semestersOverlap(Section section) {
@@ -103,14 +122,29 @@ public class Section {
         return diff <= SEMESTER_DIFF_THRESHOLD;
     }
 
-    public ArrayList<ClassRoomTime> possibleClassrooms(ArrayList<ClassRoomTime> classRooms) {
-        ArrayList<ClassRoomTime> possibleClassRooms = new ArrayList<>();
-        for (ClassRoomTime classRoom : classRooms) {
+    public ArrayList<ClassRoom> possibleClassrooms(ArrayList<ClassRoom> classRooms) {
+        ArrayList<ClassRoom> possibleClassRooms = new ArrayList<>();
+        for (ClassRoom classRoom : classRooms) {
             if (classRoom.canFitCourse(this)) {
                 possibleClassRooms.add(classRoom);
             }
         }
+        possibleClassroomSize = possibleClassRooms.size();
         return possibleClassRooms;
+    }
+
+    public int getPossibleClassroomSize() {
+        return possibleClassroomSize;
+    }
+
+    public ArrayList<Integer> possibleClassroomsIds(ArrayList<ClassRoom> classRooms) {
+        ArrayList<Integer> possibleClassRoomIds = new ArrayList<>();
+        for (ClassRoom classRoom : classRooms) {
+            if (classRoom.canFitCourse(this)) {
+                possibleClassRoomIds.add(classRoom.getId());
+            }
+        }
+        return possibleClassRoomIds;
     }
 
     @Override
@@ -131,6 +165,6 @@ public class Section {
         if (professor == null) {
             return sectionId + "\n\t Time: " + courseTime.toString() + "\n\t classroom: " + classRoom.toString();
         }
-        return sectionId + "\n\t Time: " + courseTime.toString() + "\n\t" + professor.toString() + "\n\t classroom: " + classRoom.toString();
+        return "Section: " + sectionId  + "\n\tProfessor: " + professor.toString() + "\n\tClassroom: " + classRoom.toString() + "\n\tTime: " + courseTime.toString() + "\n";
     }
 }

@@ -15,16 +15,19 @@ public class CourseTime {
         HOURHALF8,
         HOURHALF930,
         HOURHALF11,
-        HOURHALF1230,
-        HOURHALF2,
-        HOURHALF330,
-        HOURHALF500
+        HOURHALF1240,
+        HOURHALF210,
+        HOURHALF340
     }
 
     private MeetingTime meetingTime;
 
     public CourseTime(MeetingTime meetingTime) {
         this.meetingTime = meetingTime;
+    }
+
+    public CourseTime(int meetingTime) {
+        this.meetingTime = MeetingTime.values()[meetingTime];
     }
 
     public MeetingTime getMeetingTime() {
@@ -66,9 +69,9 @@ public class CourseTime {
                 MeetingTime.HOURHALF8.ordinal(),
                 MeetingTime.HOURHALF930.ordinal(),
                 MeetingTime.HOURHALF11.ordinal(),
-                MeetingTime.HOURHALF1230.ordinal(),
-                MeetingTime.HOURHALF2.ordinal(),
-                MeetingTime.HOURHALF330.ordinal()
+                MeetingTime.HOURHALF1240.ordinal(),
+                MeetingTime.HOURHALF210.ordinal(),
+                MeetingTime.HOURHALF340.ordinal()
         };
     }
 
@@ -111,14 +114,12 @@ public class CourseTime {
                 return "9:30 AM - 10:45 AM";
             case HOURHALF11:
                 return "11:00 AM - 12:15 PM";
-            case HOURHALF1230:
-                return "12:30 PM - 1:45 PM";
-            case HOURHALF2:
-                return "2:00 PM - 3:15 PM";
-            case HOURHALF330:
-                return "3:30 PM - 4:45 PM";
-            case HOURHALF500:
-                return "5:00 PM - 6:15 PM";
+            case HOURHALF1240:
+                return "12:40 PM - 1:55 PM";
+            case HOURHALF210:
+                return "2:10 PM - 3:25 PM";
+            case HOURHALF340:
+                return "3:40 PM - 4:55 PM";
             default:
                 return "";
 

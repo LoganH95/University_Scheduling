@@ -18,7 +18,6 @@ public class DatabaseConnection {
     private static final String CLASS_ROOMS_TABLE = "ClassRooms";
     private static final String PROFESSORS_TABLE = "Professors";
     private static final String QUALIFIED_COURSES_TABLE = "QualifiedCourses";
-    private static final String PREREQUISITES_TABLE = "Prerequisites";
 
     private Connection connection;
 
@@ -77,14 +76,6 @@ public class DatabaseConnection {
         export(sql);
     }
 
-    public void exportPrerequisites(Course course, Course prereq) {
-        String sql = "INSERT INTO " + PREREQUISITES_TABLE;
-        String columns = "courseId,prerequisiteId";
-        String values = course.getId() + "," + prereq.getId();
-        sql += "(" + columns + ") VALUES(" + values + ")";
-        export(sql);
-    }
-
     public void exportQualifiedCourse(Professor professor, Course course) {
         String sql = "INSERT INTO " + QUALIFIED_COURSES_TABLE;
         String columns = "professorId,courseId";
@@ -126,8 +117,8 @@ public class DatabaseConnection {
         return departments;
     }
 
-    public Map<Integer, Course> getAllCourses(Map<Integer, Department> departments) {
-        Map<Integer, Course> courses = new HashMap<>();
+    public ArrayList<Course> getAllCourses(Map<Integer, Department> departments) {
+        ArrayList<Course> courses = new ArrayList<>();
         try {
             String query = "SELECT * FROM " + COURSES_TABLE + " WHERE credits = 3";
             PreparedStatement statement = connection.prepareStatement(query);
@@ -144,7 +135,7 @@ public class DatabaseConnection {
                         resultSet.getInt("credits"),
                         resultSet.getInt("semesterId")
                 );
-                courses.put(id, course);
+                courses.add(course);
                 department.addCourse(course);
             }
             resultSet.close();
@@ -155,8 +146,8 @@ public class DatabaseConnection {
         return courses;
     }
 
-    public Map<Integer, Course> getAllCoursesForDepartment(Department department) {
-        Map<Integer, Course> courses = new HashMap<>();
+    public ArrayList<Course> getAllCoursesForDepartment(Department department) {
+        ArrayList<Course> courses = new ArrayList<>();
         try {
             String query = "SELECT * FROM " + COURSES_TABLE + " WHERE credits = 3 AND departmentId=" + department.getId();
             PreparedStatement statement = connection.prepareStatement(query);
@@ -171,7 +162,7 @@ public class DatabaseConnection {
                         resultSet.getInt("credits"),
                         resultSet.getInt("semesterId")
                 );
-                courses.put(id, course);
+                courses.add(course);
                 department.addCourse(course);
             }
             resultSet.close();
@@ -184,7 +175,7 @@ public class DatabaseConnection {
 
     public void getSections(Course course) {
         try {
-            String query = "SELECT * FROM " + SECTIONS_TABLE + " WHERE courseId=" + course.getId() + " AND classSize > 9 AND classSize <= 431";
+            String query = "SELECT * FROM " + SECTIONS_TABLE + " WHERE courseId=" + course.getId() + " AND classSize > 9 AND classSize <= 431 AND notClass = 0";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -241,30 +232,19 @@ public class DatabaseConnection {
         return classRooms;
     }
 
-    public void getQualifiedCourses(Professor professor, Map<Integer, Course> courses) {
+    public void getQualifiedCourses(Professor professor, ArrayList<Course> courses) {
         try {
             String query = "SELECT * FROM " + QUALIFIED_COURSES_TABLE + " WHERE professorId=" + professor.getId();
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 int id = resultSet.getInt("courseId");
-                Course course = courses.get(id);
-                professor.addQualifiedCourse(course);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void getPrerequisites(Course course, Map<Integer, Course> courses) {
-        try {
-            String query = "SELECT * FROM " + PREREQUISITES_TABLE + " WHERE courseId=" + course.getId();
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                int id = resultSet.getInt("prerequisiteId");
-                Course prerequisite = courses.get(id);
-                course.addPrerequisites(prerequisite);
+                for (Course course : courses) {
+                    if (course.getId() == id) {
+                        professor.addQualifiedCourse(course);
+                        break;
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

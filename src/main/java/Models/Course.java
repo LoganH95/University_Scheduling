@@ -11,7 +11,6 @@ public class Course {
     private Department department;
     private int credits;
     private int semesterId;
-    private ArrayList<Course> prerequisites;
     private ArrayList<Section> sections;
 
     public Course(String name, String code, Department department, int credits) {
@@ -25,7 +24,6 @@ public class Course {
         this.department = department;
         this.credits = credits;
         this.semesterId = semesterId;
-        prerequisites = new ArrayList<>();
         sections = new ArrayList<>();
     }
 
@@ -49,20 +47,12 @@ public class Course {
         return credits;
     }
 
-    public ArrayList<Course> getPrerequisites() {
-        return prerequisites;
-    }
-
     public ArrayList<Section> getSections() {
         return sections;
     }
 
     public int getSemesterId() {
         return semesterId;
-    }
-
-    public void addPrerequisites(Course course) {
-        prerequisites.add(course);
     }
 
     public void addSection(Section section) {
